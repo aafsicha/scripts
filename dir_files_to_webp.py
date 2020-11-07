@@ -1,4 +1,4 @@
-# cmd> python cwebp_compressor.py folder-name 80
+# cmd> python dir_files_to_webp.py folder-name 80
 
 import sys, os
 from subprocess import call
