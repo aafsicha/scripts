@@ -1,18 +1,24 @@
 #r "nuget: Newtonsoft.Json"
-#r "nuget: FSharp.Configuration"
 #r "nuget: System.Runtime.Caching"
 #r @"C:/Windows/Microsoft.NET/Framework/v4.0.30319/System.Windows.Forms.dll"
 
-open FSharp.Configuration
-open Newtonsoft.Json
+
 open System
 open System.IO
 open System.Resources
-open System.ComponentModel.Design
+open System.Collections
+type FilePath = string
+
+let readFile (filePath: FilePath) : ResXDataNode list =
+    use reader = new ResXResourceReader(filePath, UseResXDataNodes = true)
+    reader
+    |> Seq.cast
+    |> Seq.map (fun (x: DictionaryEntry) -> x.Value :?> ResXDataNode)
+    |> Seq.toList
 
 let resxFilesInDir path =
     Directory.EnumerateFiles(path, "*.*.resx")
-    |> Seq.map (fun x -> (x, ResXProvider.readFile x))
+    |> Seq.map (fun x -> (x, readFile x))
 
 let nbMissingKeys (path: String) (refNodes: list<ResXDataNode>) (nodes:list<ResXDataNode>) =
     printf "\nMissing key analysis for : %s" path
@@ -44,7 +50,7 @@ let main =
     if String.IsNullOrEmpty(args.[0]) then failwith "1st arg is null. Please provide a PATH where resx files are located" 
     if String.IsNullOrEmpty(args.[1]) then failwith "2nd arg is null. Please provide the name of the resx file that act as base file"
     System.IO.Directory.SetCurrentDirectory (args.[0]) 
-    let mainresx = ResXProvider.readFile(args.[1])
+    let mainresx = readFile(args.[1])
     printf "\n\nen-US has %i elements" mainresx.Length
 
     let resxes = resxFilesInDir "."
